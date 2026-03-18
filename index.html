@@ -6,140 +6,98 @@
     <title>EdenVM | Pro Console</title>
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="styles.css">
-    <!-- Corrected V86 Library Link -->
-    <script src="https://copy.sh"></script>
+    <!-- STABLE ENGINE LOAD -->
+    <script src="https://cdn.jsdelivr.net"></script>
     <link href="https://fonts.googleapis.com" rel="stylesheet">
     <style>
         :root {
-            --accent: var(--accent-neon, #00fff0); 
-            --panel: var(--glass-bg, rgba(255, 255, 255, 0.05));
+            --accent: #00fff0; 
+            --panel: rgba(255, 255, 255, 0.05);
         }
-        
         body { 
             font-family: 'Inter', sans-serif; 
-            background: var(--bg-dark, #050505); 
+            background: #050505; 
             background-image: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #050505 100%);
-            color: var(--text-primary, #f8f9fa); 
+            color: #f8f9fa; 
             margin: 0; 
             display: flex; 
             height: 100vh; 
             overflow: hidden; 
         }
-        
         #sidebar { 
             width: 350px; 
-            background: rgba(10, 10, 10, 0.8); 
-            backdrop-filter: blur(10px);
-            border-right: 1px solid var(--glass-border, rgba(255,255,255,0.1)); 
+            background: rgba(10, 10, 10, 0.9); 
+            backdrop-filter: blur(15px);
+            border-right: 1px solid rgba(255,255,255,0.1); 
             padding: 25px; 
-            overflow-y: auto; 
-            transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
             z-index: 10;
         }
-
         .logo { 
             font-family: 'Orbitron', sans-serif;
             font-size: 24px; 
-            color: var(--accent-neon); 
+            color: var(--accent); 
             margin-bottom: 30px; 
-            text-shadow: 0 0 10px var(--accent-neon);
+            text-shadow: 0 0 10px var(--accent);
         }
-
         .section { 
-            background: var(--glass-bg); 
+            background: var(--panel); 
             border-radius: 12px; 
             padding: 15px; 
             margin-bottom: 15px; 
-            border: 1px solid var(--glass-border); 
-            transition: 0.3s;
+            border: 1px solid rgba(255,255,255,0.1); 
         }
-        .section:hover { border-color: var(--accent-secondary); }
-
         label { display: block; font-size: 10px; color: #888; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px;}
         input, select { 
-            width: 100%; padding: 10px; background: rgba(0,0,0,0.5); 
+            width: 100%; padding: 10px; background: #000; 
             border: 1px solid #333; color: #fff; border-radius: 6px; margin-top: 5px; 
             box-sizing: border-box; outline: none;
         }
-        input:focus, select:focus { border-color: var(--accent-neon); }
-
         #vm-tool-bar { 
             position: fixed; top: -70px; left: 0; width: 100%; height: 60px; 
             background: rgba(5, 5, 5, 0.95); display: flex; align-items: center; 
             justify-content: space-between; padding: 0 30px; 
-            border-bottom: 2px solid var(--accent-neon); transition: 0.5s; z-index: 100; box-sizing: border-box;
+            border-bottom: 2px solid var(--accent); transition: 0.5s; z-index: 100; box-sizing: border-box;
         }
-
-        #main { flex-grow: 1; display: flex; align-items: center; justify-content: center; background: #000; position: relative; }
-        
-        #screen_container { background: #000; line-height: 0; position: relative; }
+        #main { flex-grow: 1; display: flex; align-items: center; justify-content: center; background: #000; }
+        #screen_container { background: #000; position: relative; }
         #screen_container canvas { display: none; box-shadow: 0 0 50px rgba(0, 255, 240, 0.2); border: 1px solid #222; }
-
-        #boot-status {
-            color: var(--accent-neon);
-            font-family: 'Orbitron', monospace;
-            text-align: center;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
+        #boot-status { color: var(--accent); font-family: 'Orbitron', monospace; letter-spacing: 2px; }
         .btn-boot { 
             width: 100%; padding: 16px; 
-            background: linear-gradient(45deg, var(--accent-neon, #00fff0), var(--accent-secondary, #ff00ea)); 
+            background: linear-gradient(45deg, #00fff0, #ff00ea); 
             border: none; font-weight: bold; border-radius: 8px; cursor: pointer; 
             font-size: 14px; margin-top: 20px; color: #000; font-family: 'Orbitron';
-            transition: 0.3s;
         }
-        .btn-boot:hover { transform: scale(1.02); filter: brightness(1.2); box-shadow: 0 0 20px var(--accent-neon); }
     </style>
 </head>
 <body>
 
 <div id="vm-tool-bar">
-    <div style="color: var(--accent-neon); font-family: 'Orbitron'; font-size: 14px;" id="active-os-name">SYSTEM: OFFLINE</div>
+    <div style="color: var(--accent); font-family: 'Orbitron';" id="active-os-name">SYSTEM: OFFLINE</div>
     <div class="controls-right">
-        <button onclick="toggleFS()" style="background:none; border:1px solid var(--accent-neon); color:white; padding:5px 15px; cursor:pointer; border-radius:4px; font-family: 'Orbitron'; font-size: 10px;">FULLSCREEN</button>
-        <button onclick="location.reload()" style="background:none; border:1px solid #ff4d4d; color:#ff4d4d; padding:5px 15px; cursor:pointer; margin-left:10px; border-radius:4px; font-family: 'Orbitron'; font-size: 10px;">SHUTDOWN</button>
+        <button onclick="location.reload()" style="background:none; border:1px solid #ff4d4d; color:#ff4d4d; padding:5px 15px; cursor:pointer; border-radius:4px;">SHUTDOWN</button>
     </div>
 </div>
 
 <div id="sidebar">
     <div class="logo">EdenVM_</div>
-    
     <div class="section">
-        <label>CPU & RAM (MB)</label>
-        <input type="number" id="ram" value="512">
-        <label>CPU Features</label>
-        <select id="cpu_gen"><option value="default">Standard x86</option><option value="acpi">ACPI Enabled</option></select>
+        <label>Memory (MB)</label>
+        <input type="number" id="ram" value="256">
     </div>
-
     <div class="section">
-        <label>Storage Configuration</label>
-        <select id="hdd_size">
-            <option value="0">No Hard Disk (Live ISO)</option>
-            <option value="2147483648">2 GB Virtual Disk</option>
-            <option value="10737418240">10 GB Virtual Disk</option>
+        <label>Operating System</label>
+        <select id="os_select">
+            <option value="https://copy.sh">Linux (Command Line)</option>
+            <option value="https://copy.sh">KolibriOS (Graphic UI)</option>
         </select>
     </div>
-
-    <div class="section">
-        <label>Boot Source</label>
-        <select id="os_select" onchange="document.getElementById('up_row').style.display=(this.value=='up'?'block':'none')">
-            <option value="https://copy.sh">Buildroot Linux (Fast)</option>
-            <option value="https://copy.sh">KolibriOS (GUI)</option>
-            <option value="up">-- Upload Local ISO --</option>
-        </select>
-        <div id="up_row" style="display:none; margin-top:10px;">
-            <input type="file" id="local_iso">
-        </div>
-    </div>
-
-    <button class="btn-boot" onclick="boot()">INITIALIZE EdenVM</button>
+    <button class="btn-boot" onclick="boot()">INITIALIZE SYSTEM</button>
 </div>
 
 <div id="main">
     <div id="screen_container">
-        <div id="boot-status">[ SYSTEM_READY ]</div>
+        <div id="boot-status">[ STANDBY ]</div>
         <canvas></canvas>
     </div>
 </div>
@@ -147,65 +105,44 @@
 <script>
     let emulator = null;
 
-    async function getBuf(id) {
-        const fileInput = document.getElementById(id);
-        if(!fileInput.files.length) return null;
-        return new Promise(res => {
-            const reader = new FileReader();
-            reader.onload = e => res(e.target.result);
-            reader.readAsArrayBuffer(fileInput.files[0]);
-        });
-    }
-
-    function toggleFS() {
-        if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-        else document.exitFullscreen();
-    }
-
     async function boot() {
         if (typeof V86Starter === "undefined") {
-            alert("Emulator engine failed to load. Check your internet connection.");
+            alert("Engine Error: V86 core not found. Check Console (F12).");
             return;
         }
 
-        const osSelect = document.getElementById('os_select');
-        const osName = osSelect.value === 'up' ? document.getElementById('local_iso').files[0]?.name : osSelect.options[osSelect.selectedIndex].text;
-        
-        // UI Transitions
-        document.getElementById('active-os-name').innerText = "VM: " + (osName || "UNKNOWN").toUpperCase();
+        // UI Changes
         document.getElementById('sidebar').style.marginLeft = "-350px"; 
         document.getElementById('vm-tool-bar').style.top = "0";
-        
+        document.getElementById('active-os-name').innerText = "RUNNING: EDEN_CORE";
         const status = document.getElementById('boot-status');
-        status.innerText = "[ BOOTING KERNEL... ]";
+        status.innerText = "[ LOADING ASSETS... ]";
 
+        const osUrl = document.getElementById('os_select').value;
+        
         const config = {
-            wasm_path: "https://copy.sh",
+            // Points to the engine binary
+            wasm_path: "https://cdn.jsdelivr.net",
             memory_size: parseInt(document.getElementById('ram').value) * 1024 * 1024,
-            vga_memory_size: 16 * 1024 * 1024,
+            vga_memory_size: 8 * 1024 * 1024,
             screen_container: document.getElementById("screen_container"),
-            bios: { url: "https://copy.sh" },
-            vga_bios: { url: "https://copy.sh" },
+            // Core BIOS files from the master build
+            bios: { url: "https://cdn.jsdelivr.net" },
+            vga_bios: { url: "https://cdn.jsdelivr.net" },
             autostart: true,
         };
 
-        const hSize = parseInt(document.getElementById('hdd_size').value);
-        if(hSize > 0) config.hda = { size: hSize };
-
-        if(osSelect.value === 'up') {
-            const iso = await getBuf('local_iso');
-            if(!iso) return alert("No ISO selected.");
-            config.cdrom = { buffer: iso };
+        // Assign source based on extension
+        if (osUrl.endsWith('.img')) {
+            config.fda = { url: osUrl };
         } else {
-            // v86 auto-detects .img vs .iso based on property
-            if (osSelect.value.endsWith('.img')) config.fda = { url: osSelect.value };
-            else config.cdrom = { url: osSelect.value };
+            config.cdrom = { url: osUrl };
         }
 
         try {
             emulator = new V86Starter(config);
             
-            // Reveal canvas when video mode is set
+            // This event triggers when the VM displays its first visual frame
             emulator.add_listener("screen-set-mode", function() {
                 document.querySelector("#screen_container canvas").style.display = "block";
                 status.style.display = "none";
@@ -213,6 +150,12 @@
         } catch (e) {
             status.innerText = "[ BOOT FAILED ]";
             console.error(e);
+        }
+    }
+</script>
+</body>
+</html>
+
         }
     }
 </script>
