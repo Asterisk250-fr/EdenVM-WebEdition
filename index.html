@@ -4,38 +4,94 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EdenVM | Pro Console</title>
-    <script src="https://cdn.jsdelivr.net"></script>
+    <link rel="manifest" href="manifest.json">
+    <!-- Load the actual V86 Emulator Library -->
+    <script src="https://copy.sh"></script>
+    <link href="https://fonts.googleapis.com" rel="stylesheet">
     <style>
-        :root { --bg: #0a0a0a; --panel: #161616; --accent: #2ecc71; --text: #eee; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        
-        /* Sidebar */
-        #sidebar { width: 350px; background: var(--panel); border-right: 1px solid #333; padding: 20px; overflow-y: auto; transition: 0.3s; }
-        .logo { font-size: 22px; font-weight: 800; color: var(--accent); margin-bottom: 20px; }
-        .section { background: #222; border-radius: 8px; padding: 12px; margin-bottom: 10px; border: 1px solid #333; }
-        label { display: block; font-size: 11px; color: #888; margin-top: 8px; text-transform: uppercase; }
-        input, select { width: 100%; padding: 8px; background: #111; border: 1px solid #444; color: #fff; border-radius: 4px; margin-top: 4px; }
-        
-        /* Top Bar (Hidden until Boot) */
-        #vm-tool-bar { position: fixed; top: -60px; left: 0; width: 100%; height: 50px; background: rgba(20,20,20,0.9); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid var(--accent); transition: 0.5s; z-index: 100; box-sizing: border-box;}
-        .vm-info { font-family: monospace; color: var(--accent); font-weight: bold; }
-        .controls-right button { background: #333; color: white; border: 1px solid #555; padding: 5px 12px; border-radius: 4px; cursor: pointer; margin-left: 10px; font-size: 12px; }
-        .controls-right button:hover { background: #444; border-color: var(--accent); }
+        :root {
+            --bg-dark: #050505;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent-neon: #00fff0;
+            --accent-secondary: #ff00ea;
+            --text-primary: #f8f9fa;
+        }
 
-        /* Main View */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg-dark); 
+            background-image: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #050505 100%);
+            color: var(--text-primary); 
+            margin: 0; 
+            display: flex; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+        
+        #sidebar { 
+            width: 350px; 
+            background: rgba(10, 10, 10, 0.8); 
+            backdrop-filter: blur(10px);
+            border-right: 1px solid var(--glass-border); 
+            padding: 20px; 
+            overflow-y: auto; 
+            transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
+            z-index: 10;
+        }
+
+        .logo { 
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px; 
+            color: var(--accent-neon); 
+            margin-bottom: 30px; 
+            text-shadow: 0 0 10px var(--accent-neon);
+        }
+
+        .section { 
+            background: var(--glass-bg); 
+            border-radius: 12px; 
+            padding: 15px; 
+            margin-bottom: 15px; 
+            border: 1px solid var(--glass-border); 
+        }
+
+        label { display: block; font-size: 10px; color: #888; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px;}
+        input, select { 
+            width: 100%; padding: 10px; background: rgba(0,0,0,0.5); 
+            border: 1px solid #333; color: #fff; border-radius: 6px; margin-top: 5px; 
+            box-sizing: border-box;
+        }
+
+        #vm-tool-bar { 
+            position: fixed; top: -70px; left: 0; width: 100%; height: 60px; 
+            background: rgba(5, 5, 5, 0.9); display: flex; align-items: center; 
+            justify-content: space-between; padding: 0 30px; 
+            border-bottom: 2px solid var(--accent-neon); transition: 0.5s; z-index: 100; box-sizing: border-box;
+        }
+
         #main { flex-grow: 1; display: flex; align-items: center; justify-content: center; background: #000; position: relative; }
-        #screen_container canvas { box-shadow: 0 0 40px rgba(0,0,0,0.5); }
-        .btn-boot { width: 100%; padding: 15px; background: var(--accent); border: none; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        
+        #screen_container { background: #000; line-height: 0; }
+        #screen_container canvas { display: none; box-shadow: 0 0 50px rgba(0, 255, 240, 0.2); max-width: 100%; height: auto; }
+
+        .btn-boot { 
+            width: 100%; padding: 16px; 
+            background: linear-gradient(45deg, var(--accent-neon), var(--accent-secondary)); 
+            border: none; font-weight: bold; border-radius: 8px; cursor: pointer; 
+            font-size: 14px; margin-top: 20px; color: #000; font-family: 'Orbitron';
+            transition: 0.3s;
+        }
+        .btn-boot:hover { transform: scale(1.02); filter: brightness(1.2); }
     </style>
 </head>
 <body>
 
 <div id="vm-tool-bar">
-    <div class="vm-info" id="active-os-name">OS: IDLE</div>
+    <div style="color: var(--accent-neon); font-family: 'Orbitron'; font-size: 14px;" id="active-os-name">SYSTEM: OFFLINE</div>
     <div class="controls-right">
-        <button onclick="addUSB()">+ ADD USB</button>
-        <button onclick="toggleFS()">FULLSCREEN</button>
-        <button onclick="location.reload()" style="color: #ff4d4d; border-color: #ff4d4d;">SHUTDOWN</button>
+        <button onclick="toggleFS()" style="background:none; border:1px solid var(--accent-neon); color:white; padding:5px 15px; cursor:pointer; border-radius:4px;">FULLSCREEN</button>
+        <button onclick="location.reload()" style="background:none; border:1px solid #ff4d4d; color:#ff4d4d; padding:5px 15px; cursor:pointer; margin-left:10px; border-radius:4px;">SHUTDOWN</button>
     </div>
 </div>
 
@@ -43,54 +99,38 @@
     <div class="logo">EdenVM_</div>
     
     <div class="section">
-        <label>CPU & RAM (MB)</label>
-        <input type="number" id="ram" value="512">
-        <label>CPU Features</label>
+        <label>System Resources</label>
+        <input type="number" id="ram" value="512" placeholder="RAM in MB">
         <select id="cpu_gen"><option value="default">Standard x86</option><option value="acpi">ACPI Enabled</option></select>
     </div>
 
     <div class="section">
-        <label>Storage Type</label>
-        <select id="drive_type">
-            <option value="hdd">Mechanical HDD (Legacy)</option>
-            <option value="ssd">Solid State Drive (Fast)</option>
-            <option value="nvme">NVMe Flash (Ultra)</option>
-        </select>
-        <label>Disk Size</label>
+        <label>Storage configuration</label>
         <select id="hdd_size">
-            <option value="0">None</option>
-            <option value="2147483648">2 GB</option>
-            <option value="10737418240">10 GB</option>
+            <option value="0">Live ISO Only</option>
+            <option value="2147483648">2 GB Virtual Disk</option>
         </select>
     </div>
 
     <div class="section">
-        <label>Graphics Emulation</label>
-        <select id="vga_type">
-            <option value="std">Standard VGA</option>
-            <option value="cirrus">Cirrus Logic</option>
-        </select>
-    </div>
-
-    <div class="section">
-        <label>Boot ISO</label>
+        <label>Operating System</label>
         <select id="os_select" onchange="document.getElementById('up_row').style.display=(this.value=='up'?'block':'none')">
-            <option value="https://copy.sh">Arch Linux</option>
-            <option value="https://copy.sh">KolibriOS</option>
-            <option value="up">-- Upload ISO --</option>
+            <option value="https://copy.sh">Buildroot Linux (Tiny)</option>
+            <option value="https://copy.sh">KolibriOS (Fast)</option>
+            <option value="up">-- Upload Local ISO --</option>
         </select>
         <div id="up_row" style="display:none; margin-top:10px;">
             <input type="file" id="local_iso">
         </div>
     </div>
 
-    <button class="btn-boot" onclick="boot()">POWER ON EdenVM</button>
+    <button class="btn-boot" onclick="boot()">INITIALIZE SYSTEM</button>
 </div>
 
-<div id="main" id="fullscreen_zone">
+<div id="main">
     <div id="screen_container">
-        <div style="color:#222; font-family: monospace;">[ SYSTEM_READY ]</div>
-        <canvas style="display:none"></canvas>
+        <div id="boot-status" style="color:var(--accent-neon); font-family: monospace; letter-spacing: 2px;">[ STATUS: STANDBY ]</div>
+        <canvas></canvas>
     </div>
 </div>
 
@@ -108,50 +148,46 @@
     }
 
     function toggleFS() {
-        let el = document.documentElement;
-        if (!document.fullscreenElement) el.requestFullscreen();
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen();
         else document.exitFullscreen();
     }
 
-    function addUSB() {
-        alert("USB Redirection: Please select a file to mount as a virtual USB stick.");
-        // Logic for hot-swapping a second drive would go here
-    }
-
     async function boot() {
-        // Fix for "V86Starter is not defined"
         if (typeof V86Starter === "undefined") {
-            alert("Emulator engine still loading... please wait 2 seconds and try again.");
+            alert("Emulator core not found. Check your internet connection.");
             return;
         }
 
         const osSelect = document.getElementById('os_select');
         const osName = osSelect.value === 'up' ? document.getElementById('local_iso').files[0]?.name : osSelect.options[osSelect.selectedIndex].text;
         
-        document.getElementById('active-os-name').innerText = "VM: " + (osName || "Unknown ISO");
-        document.getElementById('sidebar').style.marginLeft = "-350px"; // Hide sidebar
-        document.getElementById('vm-tool-bar').style.top = "0"; // Show top bar
+        // UI Transition
+        document.getElementById('active-os-name').innerText = "RUNNING: " + (osName || "CUSTOM");
+        document.getElementById('sidebar').style.marginLeft = "-350px"; 
+        document.getElementById('vm-tool-bar').style.top = "0";
+        document.getElementById('boot-status').style.display = "none";
+        
+        const canvas = document.querySelector("#screen_container canvas");
+        canvas.style.display = "block";
 
         const config = {
-            wasm_path: "https://cdn.jsdelivr.net",
+            wasm_path: "https://copy.sh",
             memory_size: parseInt(document.getElementById('ram').value) * 1024 * 1024,
-            vga_memory_size: 16 * 1024 * 1024,
+            vga_memory_size: 8 * 1024 * 1024,
             screen_container: document.getElementById("screen_container"),
             bios: { url: "https://copy.sh" },
             vga_bios: { url: "https://copy.sh" },
-            acpi: document.getElementById('cpu_gen').value === 'acpi',
             autostart: true,
         };
 
-        const hSize = parseInt(document.getElementById('hdd_size').value);
-        if(hSize > 0) config.hda = { size: hSize };
-
         if(osSelect.value === 'up') {
             const iso = await getBuf('local_iso');
-            if(!iso) return alert("No ISO selected.");
+            if(!iso) return alert("Please select an ISO file first.");
             config.cdrom = { buffer: iso };
         } else {
-            config.cdrom = { url: osSelect.value };
+            // Check if it's an image or ISO
+            if (osSelect.value.endsWith('.img')) config.fda = { url: osSelect.value };
+            else config.cdrom = { url: osSelect.value };
         }
 
         emulator = new V86Starter(config);
