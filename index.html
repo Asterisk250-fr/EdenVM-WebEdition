@@ -1,131 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EdenVM | Pro Dashboard</title>
+<meta charset="UTF-8">
+<title>EdenVM Test</title>
 
-    <!-- V86 Emulator (REQUIRED) -->
-    <script src="https://cdn.jsdelivr.net/npm/v86@latest/build/libv86.js"></script>
+<!-- V86 -->
+<script src="https://cdn.jsdelivr.net/npm/v86@latest/build/libv86.js"></script>
 
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter&family=Playwrite+DE+Grund&display=swap" rel="stylesheet">
+<style>
+body {
+    background: black;
+    color: white;
+    font-family: sans-serif;
+    text-align: center;
+}
 
-    <!-- Your external CSS -->
-    <link rel="stylesheet" href="styles.css">
+#screen_container {
+    margin-top: 20px;
+}
 
-    <!-- PWA Manifest (optional but good) -->
-    <link rel="manifest" href="manifest.json">
-
-    <style>
-        :root { --bg: #050505; --accent: #00fff0; --accent-alt: #ff00ea; --panel: rgba(255, 255, 255, 0.05); }
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: var(--bg); 
-            background-image: radial-gradient(circle at 20% 30%, #1a1a2e 0%, #050505 100%);
-            color: #fff; margin: 0; height: 100vh; overflow: hidden; 
-        }
-        .playwrite-text { font-family: 'Playwrite DE Grund', cursive; color: var(--accent); }
-        
-        #home-menu {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(20px);
-            z-index: 1000; display: flex; flex-direction: column; align-items: center; padding: 50px;
-        }
-
-        #vm-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            width: 100%;
-            max-width: 1000px;
-            margin-top: 20px;
-        }
-
-        .vm-card {
-            background: var(--panel);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 20px;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .vm-card:hover {
-            border-color: var(--accent);
-            transform: translateY(-3px);
-        }
-
-        #interface { display: none; height: 100vh; width: 100%; }
-
-        #sidebar {
-            width: 350px;
-            background: rgba(10,10,10,0.9);
-            padding: 25px;
-            border-right: 1px solid #333;
-            overflow-y: auto;
-        }
-
-        .section {
-            background: #111;
-            border: 1px solid #333;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 10px;
-            background: #000;
-            border: 1px solid #444;
-            color: #fff;
-            border-radius: 5px;
-            margin-top: 5px;
-            box-sizing: border-box;
-        }
-
-        #main {
-            flex-grow: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #000;
-        }
-
-        #screen_container canvas {
-            display: none;
-            box-shadow: 0 0 40px var(--accent);
-        }
-
-        .btn {
-            padding: 15px;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            font-family: 'Inter';
-            transition: 0.2s;
-        }
-
-        .btn-boot {
-            background: linear-gradient(45deg, var(--accent), var(--accent-alt));
-            color: #000;
-            width: 100%;
-        }
-
-        #vm-tool-bar {
-            position: fixed;
-            top: -70px;
-            left: 0;
-            width: 100%;
-            height: 60px;
-            background: #0a0a0a;
-            border-bottom: 2px solid var(--accent);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 25px;
-            z-index: 100;
-            transition: 0.5s;
-            box-sizing: border-box;
-        }
-    </style>
+canvas {
+    border: 2px solid cyan;
+}
+</style>
 </head>
+
+<body>
+
+<h1>EdenVM Test</h1>
+
+<button onclick="startVM()">Start VM</button>
+
+<div id="screen_container"></div>
+
+<script>
+function startVM() {
+    const screen = document.getElementById("screen_container");
+    screen.innerHTML = "";
+
+    console.log("Starting VM...");
+
+    new V86Starter({
+        wasm_path: "https://cdn.jsdelivr.net/npm/v86@latest/build/",
+        memory_size: 256 * 1024 * 1024,
+
+        screen_container: screen,
+
+        bios: {
+            url: "https://cdn.jsdelivr.net/npm/v86@latest/bios/seabios.bin"
+        },
+        vga_bios: {
+            url: "https://cdn.jsdelivr.net/npm/v86@latest/bios/vgabios.bin"
+        },
+
+        cdrom: {
+            url: "https://copy.sh/v86/images/alpine-linux.iso"
+        },
+
+        autostart: true,
+    });
+}
+</script>
+
+</body>
+</html>
