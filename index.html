@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>EdenVM | Advanced Web Cloud Console</title>
+    <script src="https://cdn.jsdelivr.net"></script>
+    <style>
+        :root { --bg: #0d0d0d; --panel: #1a1a1a; --accent: #2ecc71; --text: #f1f1f1; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        
+        #sidebar { width: 400px; background: var(--panel); border-right: 2px solid #333; overflow-y: auto; padding: 20px; box-shadow: 10px 0 30px rgba(0,0,0,0.5); }
+        .logo { font-size: 24px; font-weight: 800; color: var(--accent); margin-bottom: 25px; letter-spacing: -1px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        
+        .section { background: #222; border: 1px solid #444; border-radius: 8px; margin-bottom: 12px; overflow: hidden; }
+        .section-header { padding: 12px; background: #2a2a2a; cursor: pointer; font-weight: bold; font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
+        .section-body { padding: 15px; display: none; }
+        .section.open .section-body { display: block; }
+
+        label { display: block; font-size: 11px; color: #888; margin: 12px 0 4px; text-transform: uppercase; }
+        input, select { width: 100%; padding: 10px; background: #111; border: 1px solid #555; color: #fff; border-radius: 5px; box-sizing: border-box; }
+        
+        .btn-boot { width: 100%; padding: 18px; background: var(--accent); border: none; color: #000; font-weight: 900; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 15px; transition: 0.2s; }
+        .btn-boot:hover { background: #27ae60; transform: translateY(-2px); }
+
+        #main { flex-grow: 1; display: flex; flex-direction: column; background: #000; position: relative; }
+        #screen_container { flex-grow: 1; display: flex; align-items: center; justify-content: center; }
+        .status-bar { height: 30px; background: #111; border-top: 1px solid #333; display: flex; align-items: center; padding: 0 20px; font-size: 11px; color: #666; }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <div class="logo">EdenVM_</div>
+    
+    <!-- 1. CPU & PERFORMANCE -->
+    <div class="section open">
+        <div class="section-header" onclick="this.parentElement.classList.toggle('open')">CPU & LOGIC <span>▼</span></div>
+        <div class="section-body">
+            <label>CPU Instruction Set</label>
+            <select id="cpu_preset">
+                <option value="p4">Pentium 4 (Default)</option>
+                <option value="sse3">Pentium 4 + SSE3 Instructions</option>
+                <option value="modern">Experimental JIT (Faster)</option>
+            </select>
+            <label>System RAM (MB)</label>
+            <input type="number" id="ram" value="512" min="128" max="2048">
+            <label>ACPI Power Management</label>
+            <select id="acpi"><option value="true">Enabled</option><option value="false">Disabled</option></select>
+        </div>
+    </div>
+
+    <!-- 2. GPU & DISPLAY -->
+    <div class="section">
+        <div class="section-header" onclick="this.parentElement.classList.toggle('open')">GPU & GRAPHICS <span>▼</span></div>
+        <div class="section-body">
+            <label>Video Adapter</label>
+            <select id="vga_type">
+                <option value="std">Standard VGA</option>
+                <option value="svga">SVGA (Bochs VBE Extensions)</option>
+                <option value="cirrus">Cirrus Logic GD5446 (Experimental)</option>
+            </select>
+            <label>Video Memory (MB)</label>
+            <input type="number" id="vram" value="16" min="8" max="128">
+        </div>
+    </div>
+
+    <!-- 3. STORAGE & BOOT -->
+    <div class="section">
+        <div class="section-header" onclick="this.parentElement.classList.toggle('open')">STORAGE <span>▼</span></div>
+        <div class="section-body">
+            <label>Hard Drive A (Primary)</label>
+            <select id="hdd">
+                <option value="0">None</option>
+                <option value="2147483648">2 GB Raw Disk</option>
+                <option value="10737418240">10 GB Raw Disk</option>
+            </select>
+            <label>Optical Drive (ISO)</label>
+            <select id="os_select" onchange="toggleUpload(this.value)">
+                <option value="https://copy.sh">Arch Linux (CLI)</option>
+                <option value="https://copy.sh">KolibriOS (Fast Desktop)</option>
+                <option value="custom">-- UPLOAD MY OWN ISO --</option>
+            </select>
+            <div id="upload_box" style="display:none; margin-top:10px;">
+                <input type="file" id="local_iso">
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. FIRMWARE & BIOS -->
+    <div class="section">
+        <div class="section-header" onclick="this.parentElement.classList.toggle('open')">FIRMWARE (BIOS) <span>▼</span></div>
+        <div class="section-body">
+            <label>Main BIOS Slot</label>
+            <input type="file" id="bios_up">
+            <label>VGA BIOS Slot</label>
+            <input type="file" id="vga_up">
+            <p style="font-size: 10px; color: #555;">Defaults to SeaBIOS if empty.</p>
+        </div>
+    </div>
+
+    <button class="btn-boot" onclick="boot()">POWER ON EdenVM</button>
+</div>
+
+<div id="main">
+    <div id="screen_container">
+        <div style="color:#222; font-family: monospace;">[ EDEN_VM SYSTEM_IDLE ]</div>
+        <canvas style="display:none"></canvas>
+    </div>
+    <div class="status-bar" id="stat">STATUS: READY</div>
+</div>
+
+<script>
+    function toggleUpload(v) { document.getElementById('upload_box').style.display = (v === 'custom' ? 'block' : 'none'); }
+
+    async function getFile(id) {
+        const f = document.getElementById(id).files;
+        if(!f[0]) return null;
+        return new Promise(res => {
+            const r = new FileReader();
+            r.onload = e => res(e.target.result);
+            r.readAsArrayBuffer(f[0]);
+        });
+    }
+
+    async function boot() {
+        const stat = document.getElementById('stat');
+        stat.innerText = "STATUS: LOADING EdenVM_CORE...";
+        
+        const config = {
+            wasm_path: "https://cdn.jsdelivr.net",
+            memory_size: parseInt(document.getElementById('ram').value) * 1024 * 1024,
+            vga_memory_size: parseInt(document.getElementById('vram').value) * 1024 * 1024,
+            screen_container: document.getElementById("screen_container"),
+            network_relay_url: "wss://relay.widgetry.org/",
+            acpi: document.getElementById('acpi').value === 'true',
+            autostart: true,
+        };
+
+        // Firmware Management
+        const b = await getFile('bios_up');
+        config.bios = b ? { buffer: b } : { url: "https://copy.sh" };
+        const v = await getFile('vga_up');
+        config.vga_bios = v ? { buffer: v } : { url: "https://copy.sh" };
+
+        // Storage
+        const h = parseInt(document.getElementById('hdd').value);
+        if(h > 0) config.hda = { size: h };
+
+        // OS Image Logic
+        const choice = document.getElementById('os_select').value;
+        if(choice === 'custom') {
+            const iso = await getFile('local_iso');
+            if(!iso) return alert("Error: No ISO uploaded.");
+            config.cdrom = { buffer: iso };
+        } else {
+            config.cdrom = { url: choice };
+        }
+
+        new V86Starter(config);
+        stat.innerText = "STATUS: RUNNING [SYSTEM_STABLE]";
+    }
+</script>
+</body>
+</html>
