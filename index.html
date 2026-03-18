@@ -160,5 +160,10 @@
         stat.innerText = "STATUS: RUNNING [SYSTEM_STABLE]";
     }
 </script>
+    if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then(() => {
+        console.log("EdenVM Service Worker Registered");
+    });
+}
 </body>
 </html>
