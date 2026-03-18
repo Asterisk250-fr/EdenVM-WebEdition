@@ -1,0 +1,16 @@
+{
+  "name": "EdenVM Cloud Console",
+  "short_name": "EdenVM",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0d0d0d",
+  "theme_color": "#2ecc71",
+  "description": "Advanced Web-Based Virtual Machine Emulator",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
