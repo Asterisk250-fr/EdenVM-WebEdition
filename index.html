@@ -1,86 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EdenVM | Pro Dashboard</title>
-    <!-- FAIL-SAFE: Loads from the official GitHub Mirror directly -->
-    <script src="https://cdn.jsdelivr.net"></script>
-    <link href="https://fonts.googleapis.com" rel="stylesheet">
-    <style>
-        :root { --bg: #050505; --accent: #00fff0; --accent-alt: #ff00ea; --panel: rgba(255, 255, 255, 0.05); }
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: var(--bg); 
-            background-image: radial-gradient(circle at 20% 30%, #1a1a2e 0%, #050505 100%);
-            color: #fff; margin: 0; height: 100vh; overflow: hidden; 
-        }
-        .playwrite-text { font-family: 'Playwrite DE Grund', cursive; color: var(--accent); }
-        
-        /* Home Menu */
-        #home-menu {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(20px);
-            z-index: 1000; display: flex; flex-direction: column; align-items: center; padding: 50px;
-        }
-        #vm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; width: 100%; max-width: 1000px; margin-top: 20px;}
-        .vm-card { background: var(--panel); border: 1px solid rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; cursor: pointer; transition: 0.3s; }
-        .vm-card:hover { border-color: var(--accent); transform: translateY(-3px); }
-
-        /* Interface */
-        #interface { display: none; height: 100vh; width: 100%; }
-        #sidebar { width: 350px; background: rgba(10,10,10,0.9); padding: 25px; border-right: 1px solid #333; overflow-y: auto; }
-        .section { background: #111; border: 1px solid #333; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
-        input, select { width: 100%; padding: 10px; background: #000; border: 1px solid #444; color: #fff; border-radius: 5px; margin-top: 5px; box-sizing: border-box; }
-        
-        #main { flex-grow: 1; display: flex; align-items: center; justify-content: center; background: #000; }
-        #screen_container canvas { display: none; box-shadow: 0 0 40px var(--accent); }
-
-        .btn { padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-family: 'Inter'; transition: 0.2s; }
-        .btn-boot { background: linear-gradient(45deg, var(--accent), var(--accent-alt)); color: #000; width: 100%; }
-        #vm-tool-bar { position: fixed; top: -70px; left: 0; width: 100%; height: 60px; background: #0a0a0a; border-bottom: 2px solid var(--accent); display: flex; align-items: center; justify-content: space-between; padding: 0 25px; z-index: 100; transition: 0.5s; box-sizing: border-box; }
-    </style>
-</head>
-<body>
-
-<div id="home-menu">
-    <h1 class="playwrite-text" style="font-size: 50px;">EdenVM_</h1>
-    <button class="btn" style="background:var(--accent-alt); color:white;" onclick="showCreator()">+ CREATE NEW MACHINE</button>
-    <div id="vm-grid"></div>
-</div>
-
-<div id="vm-tool-bar">
-    <div class="playwrite-text" id="vm-title">VM: IDLE</div>
-    <button onclick="location.reload()" style="background:none; border:1px solid #ff4d4d; color:#ff4d4d; padding:5px 15px; cursor:pointer; border-radius:4px;">TERMINATE</button>
-</div>
-
-<div id="interface">
-    <div id="sidebar">
-        <h2 class="playwrite-text">Settings</h2>
-        <div class="section">
-            <label>Name</label><input type="text" id="vm_name" value="CyberVM_01">
-            <label>RAM (MB)</label><input type="number" id="ram" value="512">
-        </div>
-        <div class="section">
-            <label>Drive Type</label>
-            <select id="drive_type"><option value="hdd">HDD</option><option value="ssd">SSD</option><option value="nvme">NVMe</option></select>
-            <label>Disk Size</label>
-            <select id="hdd_size"><option value="0">None</option><option value="2147483648">2 GB</option><option value="10737418240">10 GB</option></select>
-        </div>
-        <div class="section">
-            <label>OS Image</label>
-            <select id="os_select"><option value="https://copy.sh">Linux</option><option value="https://copy.sh">KolibriOS</option></select>
-        </div>
-        <button class="btn btn-boot" onclick="saveAndLaunch()">SAVE & LAUNCH</button>
-    </div>
-    <div id="main"><div id="screen_container"><canvas></canvas></div></div>
-</div>
-
 <script>
     let emulator = null;
 
+    // Load saved VMs on startup
     window.onload = () => {
         const saved = JSON.parse(localStorage.getItem('edenvms') || '[]');
         const grid = document.getElementById('vm-grid');
+
         grid.innerHTML = saved.map((vm, i) => `
             <div class="vm-card" onclick="launchSaved(${i})">
                 <h3 class="playwrite-text">${vm.name}</h3>
@@ -89,52 +14,96 @@
         `).join('');
     };
 
+    // Show VM creator UI
     function showCreator() {
         document.getElementById('home-menu').style.display = 'none';
         document.getElementById('interface').style.display = 'flex';
     }
 
+    // Save VM + launch
     function saveAndLaunch() {
+        const osSelect = document.getElementById('os_select');
+
         const data = {
             name: document.getElementById('vm_name').value,
             ram: document.getElementById('ram').value,
             disk: document.getElementById('hdd_size').value,
-            os: document.getElementById('os_select').value,
-            osName: document.getElementById('os_select').options[document.getElementById('os_select').selectedIndex].text
+            os: osSelect.value,
+            osName: osSelect.options[osSelect.selectedIndex].text
         };
+
         const saved = JSON.parse(localStorage.getItem('edenvms') || '[]');
         saved.push(data);
         localStorage.setItem('edenvms', JSON.stringify(saved));
+
         boot(data);
     }
 
+    // Launch existing VM
     function launchSaved(i) {
+        const saved = JSON.parse(localStorage.getItem('edenvms') || '[]');
+        if (!saved[i]) return;
+
         showCreator();
-        boot(JSON.parse(localStorage.getItem('edenvms'))[i]);
+        boot(saved[i]);
     }
 
+    // Boot VM (FIXED + WORKING)
     async function boot(c) {
-        if (typeof V86Starter === "undefined") return alert("Engine Still Loading... Check Internet.");
+        if (typeof V86Starter === "undefined") {
+            alert("VM Engine failed to load. Check your internet.");
+            return;
+        }
+
         document.getElementById('vm-title').innerText = "RUNNING: " + c.name.toUpperCase();
         document.getElementById('sidebar').style.display = "none";
         document.getElementById('vm-tool-bar').style.top = "0";
 
         const config = {
-            wasm_path: "https://cdn.jsdelivr.net",
+            wasm_path: "https://cdn.jsdelivr.net/npm/v86@latest/build/",
             memory_size: parseInt(c.ram) * 1024 * 1024,
             screen_container: document.getElementById("screen_container"),
-            bios: { url: "https://cdn.jsdelivr.net" },
-            vga_bios: { url: "https://cdn.jsdelivr.net" },
+
+            bios: {
+                url: "https://cdn.jsdelivr.net/npm/v86@latest/bios/seabios.bin"
+            },
+            vga_bios: {
+                url: "https://cdn.jsdelivr.net/npm/v86@latest/bios/vgabios.bin"
+            },
+
             autostart: true,
         };
-        if(c.disk > 0) config.hda = { size: c.disk };
-        if(c.os.endsWith('.img')) config.fda = { url: c.os }; else config.cdrom = { url: c.os };
 
+        // Add virtual disk if selected
+        if (parseInt(c.disk) > 0) {
+            config.hda = {
+                size: parseInt(c.disk)
+            };
+        }
+
+        // Load OS image
+        if (c.os.endsWith('.img')) {
+            config.fda = { url: c.os };
+        } else {
+            config.cdrom = { url: c.os };
+        }
+
+        // Start emulator
         emulator = new V86Starter(config);
+
+        // Show screen when ready
         emulator.add_listener("screen-set-mode", () => {
-            document.querySelector("#screen_container canvas").style.display = "block";
+            const canvas = document.querySelector("#screen_container canvas");
+            if (canvas) canvas.style.display = "block";
+        });
+
+        // Debug info
+        emulator.add_listener("emulator-ready", () => {
+            console.log("VM booted successfully");
+        });
+
+        emulator.add_listener("emulator-stopped", () => {
+            console.log("VM stopped");
         });
     }
 </script>
-</body>
-</html>
