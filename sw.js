@@ -1,11 +1,11 @@
-self.addEventListener("install", (event) => {
+self.addEventListener("install", () => {
     self.skipWaiting();
 });
 
-self.addEventListener("activate", (event) => {
+self.addEventListener("activate", () => {
     console.log("Service Worker Active");
 });
 
 self.addEventListener("fetch", (event) => {
-    // basic pass-through
+    // pass-through
 });
