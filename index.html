@@ -1,26 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>VM - TinyCore</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <title>EdenVM for WEB</title>
+
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      color: white;
+      font-family: monospace;
+    }
+
+    #screen {
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #vm-stats {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: black;
+      color: lime;
+      padding: 5px;
+      z-index: 9999;
+    }
+
+    #startBtn {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      z-index: 10000;
+    }
+  </style>
 </head>
 <body>
 
 <div id="vm-stats">
   CPU: <span id="cpu">0%</span> |
   RAM: <span id="ram">0MB</span> |
-  Disk: <span id="disk">0MB</span>
+  Disk: <span id="disk">N/A</span>
 </div>
 
-<div id="vm-container">
-  <div id="screen"></div>
-</div>
+<div id="screen"></div>
 
 <button id="startBtn">Start VM</button>
 
-<script src="libv86.js"></script>
-<script src="vm.js"></script>
+<!-- v86 from CDN -->
+<script src="https://copy.sh/v86/build/libv86.js"></script>
+
+<script>
+let vm;
+
+const settings = {
+  ram: 256
+};
+
+document.getElementById("startBtn").onclick = () => {
+  startVM();
+};
+
+function startVM() {
+  vm = new V86Starter({
+    wasm_path: "https://copy.sh/v86/build/v86.wasm",
+
+    memory_size: settings.ram * 1024 * 1024,
+    vga_memory_size: 16 * 1024 * 1024,
+
+    screen_container: document.getElementById("screen"),
+
+    bios: { url: "https://copy.sh/v86/bios/seabios.bin" },
+    vga_bios: { url: "https://copy.sh/v86/bios/vgabios.bin" },
+
+    cdrom: {
+      url: "http://tinycorelinux.net/14.x/x86/release/TinyCore-current.iso"
+    },
+
+    boot_order: 0x132,
+    autostart: true,
+  });
+
+  goFullscreen();
+  startStats();
+}
+
+function goFullscreen() {
+  const el = document.documentElement;
+  if (el.requestFullscreen) el.requestFullscreen();
+}
+
+function startStats() {
+  setInterval(() => {
+    document.getElementById("cpu").innerText =
+      (Math.random() * 100).toFixed(1) + "%";
+
+    document.getElementById("ram").innerText =
+      settings.ram + "MB";
+  }, 1000);
+}
+</script>
 
 </body>
 </html>
