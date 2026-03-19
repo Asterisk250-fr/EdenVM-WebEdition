@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VM Setup and Control</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .collapsible { background-color: #777; color: white; cursor: pointer; padding: 10px; width: 100%; border: none; text-align: left; outline: none; font-size: 15px; }
+        .active, .collapsible:hover { background-color: #555; }
+        .content { padding: 0 18px; display: none; overflow: hidden; background-color: #f1f1f1; }
+        h2 { color: #333; }
+    </style>
+    <script>
+        function toggleSection(section) {
+            section.classList.toggle('active');
+            var content = section.nextElementSibling;
+            if (content.style.display === "block") {
+                content.style.display = "none";
+            } else {
+                content.style.display = "block";
+            }
+        }
+
+        function vmOperation(action) {
+            alert('VM operation: ' + action);
+            // Implement actual VM operations here
+        }
+    </script>
+</head>
+<body>
+    <h1>VM Setup and Control</h1>
+
+    <button class="collapsible" onclick="toggleSection(this)">VM Control</button>
+    <div class="content">
+        <button onclick="vmOperation('Start VM')">Start VM</button>
+        <button onclick="vmOperation('Stop VM')">Stop VM</button>
+        <button onclick="vmOperation('Restart VM')">Restart VM</button>
+    </div>
+
+    <button class="collapsible" onclick="toggleSection(this)">Disk Management</button>
+    <div class="content">
+        <label for="diskSize">Disk Size (GB):</label>
+        <input type="number" id="diskSize" name="diskSize" min="1">
+        <button onclick="vmOperation('Add Disk')">Add Disk</button>
+    </div>
+
+    <button class="collapsible" onclick="toggleSection(this)">ISO Selection</button>
+    <div class="content">
+        <label for="isoFiles">Select ISO:</label>
+        <select id="isoFiles">
+            <option value="iso1.iso">ISO 1</option>
+            <option value="iso2.iso">ISO 2</option>
+            <option value="iso3.iso">ISO 3</option>
+        </select>
+        <button onclick="vmOperation('Attach ISO')">Attach ISO</button>
+    </div>
+
+    <button class="collapsible" onclick="toggleSection(this)">Hardware Configuration</button>
+    <div class="content">
+        <label for="cpuCores">CPU Cores:</label>
+        <input type="number" id="cpuCores" name="cpuCores" min="1">
+        <label for="ramSize">RAM Size (GB):</label>
+        <input type="number" id="ramSize" name="ramSize" min="1">
+        <button onclick="vmOperation('Configure Hardware')">Configure Hardware</button>
+    </div>
+
+    <button class="collapsible" onclick="toggleSection(this)">Network</button>
+    <div class="content">
+        <label for="networkAdapter">Network Adapter:</label>
+        <select id="networkAdapter">
+            <option value="nat">NAT</option>
+            <option value="bridged">Bridged</option>
+        </select>
+        <button onclick="vmOperation('Configure Network')">Configure Network</button>
+    </div>
+
+    <button class="collapsible" onclick="toggleSection(this)">Boot Options</button>
+    <div class="content">
+        <label for="bootOrder">Boot Order:</label>
+        <select id="bootOrder">
+            <option value="iso">ISO</option>
+            <option value="hd">Hard Disk</option>
+        </select>
+        <button onclick="vmOperation('Set Boot Option')">Set Boot Option</button>
+    </div>
+
+    <button class="collapsible" onclick="toggleSection(this)">Display</button>
+    <div class="content">
+        <label for="displayResolution">Resolution:</label>
+        <select id="displayResolution">
+            <option value="1024x768">1024x768</option>
+            <option value="1920x1080">1920x1080</option>
+            <option value="1280x720">1280x720</option>
+        </select>
+        <button onclick="vmOperation('Set Display')">Set Display</button>
+    </div>
+</body>
+</html>
