@@ -14,3 +14,9 @@ A virtual machine emulator for web and download. Use your own ISO or the already
 -Boot multiple systems at a time
 
 -Change device type
+
+# About
+
+Super fast and easy to use. use 3 pre installed ISO/IMG files
+The VM is yours, do anything you want with it.
+Absolutly no lag*
