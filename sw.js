@@ -1,3 +1,11 @@
-self.addEventListener('fetch', (event) => {
-    // Basic service worker to satisfy PWA requirements
+self.addEventListener("install", (event) => {
+    self.skipWaiting();
+});
+
+self.addEventListener("activate", (event) => {
+    console.log("Service Worker Active");
+});
+
+self.addEventListener("fetch", (event) => {
+    // basic pass-through
 });
