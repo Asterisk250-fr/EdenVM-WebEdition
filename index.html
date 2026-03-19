@@ -1,185 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EdenVM</title>
-
-<!-- PWA -->
-<link rel="manifest" href="manifest.json">
-
-<!-- Styles -->
-<link rel="stylesheet" href="style.css">
-
-<!-- V86 -->
-<script src="https://cdn.jsdelivr.net/npm/v86@latest/build/libv86.js"></script>
-
-<style>
-body { margin:0; background:black; color:white; font-family:Arial; }
-</style>
+  <meta charset="UTF-8" />
+  <title>VM - TinyCore</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
 
-<div id="topbar">
-    <div id="title">EdenVM</div>
-    <button onclick="location.reload()">Reset</button>
+<div id="vm-stats">
+  CPU: <span id="cpu">0%</span> |
+  RAM: <span id="ram">0MB</span> |
+  Disk: <span id="disk">0MB</span>
 </div>
 
-<div id="container">
-
-    <div id="sidebar">
-        <h3>VM Settings</h3>
-
-        <label>Name</label>
-        <input id="name" value="MyVM">
-
-        <label>RAM (MB)</label>
-        <input id="ram" type="number" value="256">
-
-        <label>OS (Built-in)</label>
-        <select id="os">
-            <option value="images/alpine.iso">Linux (Alpine)</option>
-            <option value="images/kolibri.img">KolibriOS</option>
-            <option value="https://copy.sh/v86/images/alpine-linux.iso">Linux (Online fallback)</option>
-        </select>
-
-        <label>Custom ISO / IMG</label>
-        <input type="file" id="isoFile" accept=".iso,.img">
-
-        <button class="boot-btn" onclick="boot()">BOOT</button>
-    </div>
-
-    <div id="main">
-        <div id="screen_container"></div>
-    </div>
-
+<div id="vm-container">
+  <div id="screen"></div>
 </div>
 
-<script>
-let emulator = null;
-let currentFileUrl = null;
+<button id="startBtn">Start VM</button>
 
-function boot() {
-
-    // 🧹 Clean old VM
-    if (emulator) {
-        try {
-            emulator.stop();
-            emulator.destroy();
-        } catch(e) {}
-        emulator = null;
-    }
-
-    // 🧹 Clean old blob URL
-    if (currentFileUrl) {
-        URL.revokeObjectURL(currentFileUrl);
-        currentFileUrl = null;
-    }
-
-    const screen = document.getElementById("screen_container");
-    screen.innerHTML = "";
-
-    const ram = parseInt(document.getElementById("ram").value) || 256;
-    const name = document.getElementById("name").value;
-    const os = document.getElementById("os").value;
-    const fileInput = document.getElementById("isoFile");
-
-    document.getElementById("title").innerText = "RUNNING: " + name;
-
-    // 💾 Save settings
-    localStorage.setItem("vm_ram", ram);
-    localStorage.setItem("vm_name", name);
-    localStorage.setItem("vm_os", os);
-
-    let cdrom = undefined;
-    let fda = undefined;
-
-    // 📂 Custom file takes priority
-    if (fileInput.files.length > 0) {
-        const file = fileInput.files[0];
-
-        console.log("Using custom file:", file.name);
-
-        currentFileUrl = URL.createObjectURL(file);
-
-        if (file.name.endsWith(".iso")) {
-            cdrom = { url: currentFileUrl };
-        } else if (file.name.endsWith(".img")) {
-            fda = { url: currentFileUrl };
-        } else {
-            alert("Unsupported file type. Use .iso or .img");
-            return;
-        }
-
-    } else {
-        // 🌐 Built-in OS
-        if (os.endsWith(".iso")) {
-            cdrom = { url: os };
-        } else if (os.endsWith(".img")) {
-            fda = { url: os };
-        }
-    }
-
-    console.log("Booting VM...");
-
-    emulator = new V86Starter({
-
-        wasm_path: "https://cdn.jsdelivr.net/npm/v86@latest/build/v86.wasm",
-
-        memory_size: ram * 1024 * 1024,
-
-        screen_container: screen,
-
-        bios: {
-            url: "https://cdn.jsdelivr.net/npm/v86@latest/bios/seabios.bin"
-        },
-        vga_bios: {
-            url: "https://cdn.jsdelivr.net/npm/v86@latest/bios/vgabios.bin"
-        },
-
-        disable_audio: true,
-        autostart: true,
-
-        cdrom: cdrom,
-        fda: fda,
-
-        boot_order: 0x132
-    });
-
-    emulator.add_listener("screen-set-mode", () => {
-        const canvas = document.querySelector("#screen_container canvas");
-        if (canvas) {
-            canvas.style.display = "block";
-        }
-    });
-
-    emulator.add_listener("download-error", e => {
-        console.error("Download failed:", e);
-        alert("Failed to load OS.");
-    });
-}
-
-
-// 🔁 Load saved settings
-window.onload = () => {
-    if (localStorage.getItem("vm_ram")) {
-        document.getElementById("ram").value = localStorage.getItem("vm_ram");
-    }
-    if (localStorage.getItem("vm_name")) {
-        document.getElementById("name").value = localStorage.getItem("vm_name");
-    }
-    if (localStorage.getItem("vm_os")) {
-        document.getElementById("os").value = localStorage.getItem("vm_os");
-    }
-};
-
-
-// ⚙️ Service Worker
-if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js");
-}
-</script>
+<script src="libv86.js"></script>
+<script src="vm.js"></script>
 
 </body>
 </html>
