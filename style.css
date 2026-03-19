@@ -1,85 +1,36 @@
-:root {
-    --bg: #050505;
-    --panel: #0f0f0f;
-    --border: #222;
-    --accent: #00fff0;
-    --accent2: #ff00ea;
-}
-
 body {
-    margin: 0;
-    background: radial-gradient(circle at 20% 20%, #1a1a2e, #050505);
-    color: white;
-    font-family: Arial, sans-serif;
+  margin: 0;
+  background: black;
+  color: white;
+  font-family: monospace;
 }
 
-/* TOP BAR */
-#topbar {
-    height: 60px;
-    background: black;
-    border-bottom: 2px solid var(--accent);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 20px;
+#vm-container {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
 }
 
-#title {
-    color: var(--accent);
-    font-weight: bold;
+#screen {
+  width: 100%;
+  height: 100%;
 }
 
-/* LAYOUT */
-#container {
-    display: flex;
-    height: calc(100vh - 60px);
+#vm-stats {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: black;
+  color: lime;
+  padding: 5px;
+  z-index: 9999;
+  font-size: 14px;
 }
 
-#sidebar {
-    width: 300px;
-    background: var(--panel);
-    padding: 20px;
-    border-right: 1px solid var(--border);
-}
-
-#main {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: black;
-}
-
-/* SCREEN */
-#screen_container canvas {
-    display: block;
-    border: 2px solid var(--accent);
-    box-shadow: 0 0 30px var(--accent);
-}
-
-/* INPUTS */
-input, select {
-    width: 100%;
-    padding: 10px;
-    margin-top: 10px;
-    background: black;
-    border: 1px solid #333;
-    color: white;
-    border-radius: 6px;
-}
-
-/* BUTTONS */
-button {
-    padding: 10px 15px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-.boot-btn {
-    width: 100%;
-    margin-top: 20px;
-    background: linear-gradient(45deg, var(--accent), var(--accent2));
-    color: black;
-    font-weight: bold;
+#startBtn {
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+  z-index: 10000;
 }
