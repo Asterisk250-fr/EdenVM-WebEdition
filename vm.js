@@ -1,56 +1,83 @@
 let vm;
+let uploadedISO = null;
 
-const settings = {
-  ram: 256, // MB
-  vram: 16, // MB
+const VM_SETTINGS = {
+  ram: 512,
+  vram: 32,
+  diskSize: 0
 };
 
-document.getElementById("startBtn").onclick = () => {
-  startVM();
+// ISO upload
+document.getElementById("isoUpload").onchange = function(e) {
+  const file = e.target.files[0];
+  const reader = new FileReader();
+
+  reader.onload = function() {
+    uploadedISO = new Uint8Array(reader.result);
+    alert("ISO loaded!");
+  };
+
+  reader.readAsArrayBuffer(file);
 };
 
-function startVM() {
+// Start VM
+async function startVM() {
+  const selectedDisk = document.getElementById("diskSelect").value;
+  let diskBuffer = null;
+
+  if (selectedDisk) {
+    diskBuffer = await loadDisk(selectedDisk);
+    VM_SETTINGS.diskSize = diskBuffer.byteLength / (1024 * 1024);
+  }
+
   vm = new V86Starter({
-    wasm_path: "v86.wasm",
-    memory_size: settings.ram * 1024 * 1024,
-    vga_memory_size: settings.vram * 1024 * 1024,
+    wasm_path: "https://copy.sh/v86/build/v86.wasm",
+
+    memory_size: VM_SETTINGS.ram * 1024 * 1024,
+    vga_memory_size: VM_SETTINGS.vram * 1024 * 1024,
 
     screen_container: document.getElementById("screen"),
 
-    bios: { url: "bios/seabios.bin" },
-    vga_bios: { url: "bios/vgabios.bin" },
+    bios: { url: "https://copy.sh/v86/bios/seabios.bin" },
+    vga_bios: { url: "https://copy.sh/v86/bios/vgabios.bin" },
 
-    cdrom: {
-      url: "ISO/TinyCore-current.iso"
-    },
+    cdrom: uploadedISO
+      ? { buffer: uploadedISO }
+      : { url: "https://copy.sh/v86/images/tinycore.iso" },
 
-    boot_order: 0x132, // CD first
+    hda: diskBuffer ? { buffer: diskBuffer } : undefined,
 
+    boot_order: 0x132,
     autostart: true,
   });
 
-  enableFullscreen();
+  goFullscreen();
   startStats();
 }
 
-function enableFullscreen() {
+// Fullscreen
+function goFullscreen() {
   const el = document.documentElement;
-
-  if (el.requestFullscreen) {
-    el.requestFullscreen();
-  }
+  if (el.requestFullscreen) el.requestFullscreen();
 }
 
+// Stats
 function startStats() {
   setInterval(() => {
-    // Fake stats (real ones are limited in browser VM)
     document.getElementById("cpu").innerText =
       (Math.random() * 100).toFixed(1) + "%";
 
     document.getElementById("ram").innerText =
-      settings.ram + "MB";
+      VM_SETTINGS.ram + "MB";
 
     document.getElementById("disk").innerText =
-      "N/A";
+      VM_SETTINGS.diskSize
+        ? VM_SETTINGS.diskSize.toFixed(0) + "MB"
+        : "None";
   }, 1000);
 }
+
+// Load disks on startup
+window.onload = () => {
+  refreshDisks();
+};
