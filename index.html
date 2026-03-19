@@ -5,92 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EdenVM</title>
 
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+
+<!-- Styles -->
+<link rel="stylesheet" href="style.css">
+
 <!-- V86 Emulator -->
 <script src="https://cdn.jsdelivr.net/npm/v86@latest/build/libv86.js"></script>
 
 <style>
-:root {
-    --bg: #050505;
-    --panel: #0f0f0f;
-    --accent: #00fff0;
-    --accent2: #ff00ea;
-}
-
-body {
-    margin: 0;
-    background: radial-gradient(circle at 20% 20%, #1a1a2e, #050505);
-    color: white;
-    font-family: Arial, sans-serif;
-}
-
-/* Top bar */
-#topbar {
-    height: 60px;
-    background: black;
-    border-bottom: 2px solid var(--accent);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 20px;
-}
-
-#title {
-    color: var(--accent);
-    font-weight: bold;
-}
-
-button {
-    padding: 10px 15px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-/* Layout */
-#container {
-    display: flex;
-    height: calc(100vh - 60px);
-}
-
-#sidebar {
-    width: 300px;
-    background: var(--panel);
-    padding: 20px;
-    border-right: 1px solid #222;
-}
-
-#main {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: black;
-}
-
-/* Screen */
-#screen_container canvas {
-    display: block;
-    border: 2px solid var(--accent);
-    box-shadow: 0 0 30px var(--accent);
-}
-
-/* Inputs */
-input, select {
-    width: 100%;
-    padding: 10px;
-    margin-top: 10px;
-    background: black;
-    border: 1px solid #333;
-    color: white;
-}
-
-.boot-btn {
-    width: 100%;
-    margin-top: 20px;
-    background: linear-gradient(45deg, var(--accent), var(--accent2));
-    color: black;
-    font-weight: bold;
-}
+/* Minimal fallback styling (in case CSS fails to load) */
+body { margin:0; background:black; color:white; font-family:Arial; }
 </style>
 </head>
 
@@ -114,8 +40,12 @@ input, select {
 
         <label>OS</label>
         <select id="os">
-            <option value="https://copy.sh/v86/images/alpine-linux.iso">Linux (Alpine)</option>
-            <option value="https://copy.sh/v86/images/kolibri.img">KolibriOS</option>
+            <!-- LOCAL FILES (recommended) -->
+            <option value="images/alpine.iso">Linux (Alpine)</option>
+            <option value="images/kolibri.img">KolibriOS</option>
+
+            <!-- fallback online -->
+            <option value="https://copy.sh/v86/images/alpine-linux.iso">Linux (Online fallback)</option>
         </select>
 
         <button class="boot-btn" onclick="boot()">BOOT</button>
@@ -131,19 +61,36 @@ input, select {
 let emulator = null;
 
 function boot() {
+
+    // 🧹 CLEAN OLD VM
+    if (emulator) {
+        try {
+            emulator.stop();
+            emulator.destroy();
+        } catch(e) {}
+        emulator = null;
+    }
+
     const screen = document.getElementById("screen_container");
     screen.innerHTML = "";
 
-    const ram = parseInt(document.getElementById("ram").value);
+    const ram = parseInt(document.getElementById("ram").value) || 256;
     const os = document.getElementById("os").value;
     const name = document.getElementById("name").value;
+
+    // 💾 SAVE SETTINGS
+    localStorage.setItem("vm_ram", ram);
+    localStorage.setItem("vm_name", name);
+    localStorage.setItem("vm_os", os);
 
     document.getElementById("title").innerText = "RUNNING: " + name;
 
     console.log("Booting VM...");
 
     emulator = new V86Starter({
-        wasm_path: "https://cdn.jsdelivr.net/npm/v86@latest/build/",
+
+        wasm_path: "https://cdn.jsdelivr.net/npm/v86@latest/build/v86.wasm",
+
         memory_size: ram * 1024 * 1024,
 
         screen_container: screen,
@@ -154,6 +101,8 @@ function boot() {
         vga_bios: {
             url: "https://cdn.jsdelivr.net/npm/v86@latest/bios/vgabios.bin"
         },
+
+        disable_audio: true,
 
         autostart: true,
 
@@ -171,8 +120,28 @@ function boot() {
 
     emulator.add_listener("download-error", e => {
         console.error("Download failed:", e);
-        alert("OS failed to load. Try different internet.");
+        alert("OS failed to load. Try another option.");
     });
+}
+
+
+// 🔁 LOAD SAVED SETTINGS
+window.onload = () => {
+    if (localStorage.getItem("vm_ram")) {
+        document.getElementById("ram").value = localStorage.getItem("vm_ram");
+    }
+    if (localStorage.getItem("vm_name")) {
+        document.getElementById("name").value = localStorage.getItem("vm_name");
+    }
+    if (localStorage.getItem("vm_os")) {
+        document.getElementById("os").value = localStorage.getItem("vm_os");
+    }
+};
+
+
+// ⚙️ SERVICE WORKER
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js");
 }
 </script>
 
